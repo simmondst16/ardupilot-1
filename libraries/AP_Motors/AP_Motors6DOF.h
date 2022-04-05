@@ -37,6 +37,7 @@ public:
 
     // Map thrust input -1~1 to pwm output 1100~1900
     int16_t calc_thrust_to_pwm(float thrust_in) const;
+    int16_t calc_thrust_to_pwm_slew(float thrust_in, float lastPwm, float slew) const;
 
     // output_to_motors - sends minimum values out to the motors
     void output_to_motors() override;

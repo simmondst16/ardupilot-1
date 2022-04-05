@@ -22,6 +22,8 @@
 #include "AP_Motors6DOF.h"
 
 extern const AP_HAL::HAL& hal;
+int16_t lastPwm[AP_MOTORS_MAX_NUM_MOTORS];
+
 
 // parameters for the motor class
 const AP_Param::GroupInfo AP_Motors6DOF::var_info[] = {
@@ -258,6 +260,27 @@ int16_t AP_Motors6DOF::calc_thrust_to_pwm(float thrust_in) const
     return constrain_int16(1500 + thrust_in * 400, _throttle_radio_min, _throttle_radio_max);
 }
 
+int16_t AP_Motors6DOF::calc_thrust_to_pwm_slew(float thrust_in, float last_pwm, float slew_time) const
+{
+    // Output limits with no slew time applied
+    float output_slew_limit_up = 1.0f;
+    float output_slew_limit_dn = 0.0f;
+    float output_delta_max = 1.0f / (constrain_float(slew_time, 0.0f, 0.5f) * _loop_rate);
+    output_delta_max *= (_throttle_radio_max-_throttle_radio_min)/2;
+    // If MOT_SLEW_UP_TIME is set, calculate the highest allowed new output value, constrained 0.0~1.0
+    if (is_positive(_slew_up_time)) {
+        output_slew_limit_up = constrain_float(last_pwm + output_delta_max, 0.0f, 1.0f);
+    }
+
+    // If MOT_SLEW_DN_TIME is set, calculate the lowest allowed new output value, constrained 0.0~1.0
+    if (is_positive(_slew_dn_time)) {
+        output_slew_limit_dn = constrain_float(last_pwm - output_delta_max, 0.0f, 1.0f);
+    }
+    //return constrain_int16(1500 + thrust_in * 400, _throttle_radio_min, _throttle_radio_max);
+
+    return constrain_int16(1500 + thrust_in * 400, _throttle_radio_min*output_slew_limit_dn, _throttle_radio_max*output_slew_limit_dn);
+}
+
 void AP_Motors6DOF::output_to_motors()
 {
     int8_t i;
@@ -282,9 +305,25 @@ void AP_Motors6DOF::output_to_motors()
         }
         break;
     case SpoolState::SPOOLING_UP:
-    case SpoolState::THROTTLE_UNLIMITED:
+        // set motor spool up output based on thrust requests
+        for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
+            if (motor_enabled[i]) {
+                motor_out[i] = calc_thrust_to_pwm_slew(_thrust_rpyt_out[i], lastPwm[i], _slew_up_time);
+                lastPwm[i] = motor_out[i];
+            }
+        }
+        break;
+    
     case SpoolState::SPOOLING_DOWN:
         // set motor output based on thrust requests
+        for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
+            if (motor_enabled[i]) {
+                motor_out[i] = calc_thrust_to_pwm_slew(_thrust_rpyt_out[i], lastPwm[i], _slew_dn_time);
+                lastPwm[i] = motor_out[i];
+            }
+        }
+        break;
+    case SpoolState::THROTTLE_UNLIMITED:
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
             if (motor_enabled[i]) {
                 motor_out[i] = calc_thrust_to_pwm(_thrust_rpyt_out[i]);
@@ -292,6 +331,7 @@ void AP_Motors6DOF::output_to_motors()
         }
         break;
     }
+    
 
     // send output to each motor
     for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
