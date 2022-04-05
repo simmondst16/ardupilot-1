@@ -8,6 +8,8 @@
 #include <RC_Channel/RC_Channel.h>     // RC Channel Library
 #include "AP_MotorsMatrix.h"
 
+//#define AP_MOTORS_SLEW_TIME_DEFAULT     0.0f    // slew rate limit for thrust output
+
 /// @class      AP_MotorsMatrix
 class AP_Motors6DOF : public AP_MotorsMatrix {
 public:
@@ -71,6 +73,8 @@ protected:
     // Parameters
     AP_Int8             _motor_reverse[AP_MOTORS_MAX_NUM_MOTORS];
     AP_Float            _forwardVerticalCouplingFactor;
+    //AP_Float            _slew_up_time;
+    //AP_Float            _slew_dn_time;
 
     float               _throttle_factor[AP_MOTORS_MAX_NUM_MOTORS]; // each motors contribution to throttle (climb/descent)
     float               _forward_factor[AP_MOTORS_MAX_NUM_MOTORS]; // each motors contribution to forward/backward

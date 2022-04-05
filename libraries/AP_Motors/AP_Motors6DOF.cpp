@@ -127,7 +127,7 @@ const AP_Param::GroupInfo AP_Motors6DOF::var_info[] = {
     // @Units: s
     // @Increment: 0.001
     // @User: Advanced
-    AP_GROUPINFO("SLEW_UP_TIME",   14, AP_Motors6DOF,  _slew_up_time, AP_MOTORS_SLEW_TIME_DEFAULT),
+    //AP_GROUPINFO("SLEW_UP_TIME",   14, AP_Motors6DOF,  _slew_up_time, AP_MOTORS_SLEW_TIME_DEFAULT),
 
     // @Param: SLEW_DN_TIME
     // @DisplayName: Output slew time for decreasing throttle
@@ -136,7 +136,7 @@ const AP_Param::GroupInfo AP_Motors6DOF::var_info[] = {
     // @Units: s
     // @Increment: 0.001
     // @User: Advanced
-    AP_GROUPINFO("SLEW_DN_TIME",   15, AP_Motors6DOF,  _slew_dn_time, AP_MOTORS_SLEW_TIME_DEFAULT),
+    //AP_GROUPINFO("SLEW_DN_TIME",   15, AP_Motors6DOF,  _slew_dn_time, AP_MOTORS_SLEW_TIME_DEFAULT),
 
     AP_GROUPEND
 };
@@ -262,6 +262,9 @@ int16_t AP_Motors6DOF::calc_thrust_to_pwm(float thrust_in) const
 
 int16_t AP_Motors6DOF::calc_thrust_to_pwm_slew(float thrust_in, float last_pwm, float slew_time) const
 {
+    if(last_pwm<=1099 || last_pwm>=1901){
+        last_pwm = 1500;
+    }
     // Output limits with no slew time applied
     float output_slew_limit_up = 1.0f;
     float output_slew_limit_dn = 0.0f;
