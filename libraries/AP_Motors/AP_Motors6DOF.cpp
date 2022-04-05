@@ -278,7 +278,7 @@ int16_t AP_Motors6DOF::calc_thrust_to_pwm_slew(float thrust_in, float last_pwm, 
     }
     //return constrain_int16(1500 + thrust_in * 400, _throttle_radio_min, _throttle_radio_max);
 
-    return constrain_int16(1500 + thrust_in * 400, _throttle_radio_min*output_slew_limit_dn, _throttle_radio_max*output_slew_limit_dn);
+    return constrain_int16(1500 + thrust_in * 400, _throttle_radio_min*output_slew_limit_dn, _throttle_radio_max*output_slew_limit_up);
 }
 
 void AP_Motors6DOF::output_to_motors()
