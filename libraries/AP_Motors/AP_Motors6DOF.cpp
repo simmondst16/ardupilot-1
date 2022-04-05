@@ -118,6 +118,24 @@ const AP_Param::GroupInfo AP_Motors6DOF::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("12_DIRECTION", 13, AP_Motors6DOF, _motor_reverse[11], 1),
 
+    // @Param: SLEW_UP_TIME
+    // @DisplayName: Output slew time for increasing throttle
+    // @Description: Time in seconds to slew output from zero to full.  For medium size copter such as a Solo, a value of 0.25 is a good starting point.  This is used to limit the rate at which output can change. Range is constrained between 0 and 0.5.
+    // @Range: 0 .5
+    // @Units: s
+    // @Increment: 0.001
+    // @User: Advanced
+    AP_GROUPINFO("SLEW_UP_TIME",   14, AP_Motors6DOF,  _slew_up_time, AP_MOTORS_SLEW_TIME_DEFAULT),
+
+    // @Param: SLEW_DN_TIME
+    // @DisplayName: Output slew time for decreasing throttle
+    // @Description: Time in seconds to slew output from full to zero.  For medium size copter such as a Solo, a value of 0.275 is a good starting point.  This is used to limit the rate at which output can change.  Range is constrained between 0 and 0.5.
+    // @Range: 0 .5
+    // @Units: s
+    // @Increment: 0.001
+    // @User: Advanced
+    AP_GROUPINFO("SLEW_DN_TIME",   15, AP_Motors6DOF,  _slew_dn_time, AP_MOTORS_SLEW_TIME_DEFAULT),
+
     AP_GROUPEND
 };
 
@@ -174,14 +192,14 @@ void AP_Motors6DOF::setup_motors(motor_frame_class frame_class, motor_frame_type
     case SUB_FRAME_CUSTOM:
         // Put your custom motor setup here
     //                 Motor #              Roll Factor     Pitch Factor    Yaw Factor      Throttle Factor     Forward Factor      Lateral Factor  Testing Order
-        add_motor_raw_6dof(AP_MOTORS_MOT_1,     0,              0,              0,                  0.6088f,            0,               -0.7934f,       1);
-        add_motor_raw_6dof(AP_MOTORS_MOT_2,     0,              0,              0,                  0.6088f,           0,               0.7934f,        2);
-        add_motor_raw_6dof(AP_MOTORS_MOT_3,     0,              0,              0.2f,               0,                  1.0f,            0,              3);
-        add_motor_raw_6dof(AP_MOTORS_MOT_4,     0,              0,              -0.2f,              0,                  1.0f,            0,              4);
+        add_motor_raw_6dof(AP_MOTORS_MOT_1,     0,              0,              0,                  -1.0f,            0,               1.0f,       1);
+        add_motor_raw_6dof(AP_MOTORS_MOT_2,     0,              0,              0,                  -1.0f,           0,               -1.0f,        2);
+        add_motor_raw_6dof(AP_MOTORS_MOT_3,     0,              0,              1.0f,               0,                  1.0f,            0,              3);
+        add_motor_raw_6dof(AP_MOTORS_MOT_4,     0,              0,              -1.0f,              0,                  1.0f,            0,              4);
         break;
 /*
         add_motor_raw_6dof(AP_MOTORS_MOT_1,     0,              0,              0,                  1.0f,            0,               -1.0f,       1);
-        add_motor_raw_6dof(AP_MOTORS_MOT_2,     0,              0,              0,                  -1.0f,           0,               1.0f,        2);
+        add_motor_raw_6dof(AP_MOTORS_MOT_2,     0,              0,              0,                  1.0f,           0,               1.0f,        2);
         add_motor_raw_6dof(AP_MOTORS_MOT_3,     0,              0,              1.0f,               0,                  1.0f,            0,              3);
         add_motor_raw_6dof(AP_MOTORS_MOT_4,     0,              0,              -1.0f,              0,                  1.0f,            0,              4);
         break;
