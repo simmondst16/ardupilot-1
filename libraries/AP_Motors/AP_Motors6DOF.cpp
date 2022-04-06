@@ -142,6 +142,7 @@ const AP_Param::GroupInfo AP_Motors6DOF::var_info[] = {
 };
 
 void AP_Motors6DOF::setup_motors(motor_frame_class frame_class, motor_frame_type frame_type)
+
 {
     // remove existing motors
     for (int8_t i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
@@ -221,6 +222,9 @@ void AP_Motors6DOF::setup_motors(motor_frame_class frame_class, motor_frame_type
         add_motor_raw_6dof(AP_MOTORS_MOT_5,     0,              0,              0,              0,                  0,                  1.0f,           5);
         break;
     }
+    for (int8_t i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
+        lastPwm[i] = 1500;
+    }
 }
 
 void AP_Motors6DOF::add_motor_raw_6dof(int8_t motor_num, float roll_fac, float pitch_fac, float yaw_fac, float throttle_fac, float forward_fac, float lat_fac, uint8_t testing_order)
@@ -251,6 +255,7 @@ void AP_Motors6DOF::output_min()
     for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
         if (motor_enabled[i]) {
             rc_write(i, 1500);
+            lastPwm[i] = 1500;
         }
     }
 }
@@ -262,26 +267,23 @@ int16_t AP_Motors6DOF::calc_thrust_to_pwm(float thrust_in) const
 
 int16_t AP_Motors6DOF::calc_thrust_to_pwm_slew(float thrust_in, float last_pwm, float slew_time) const
 {
-    if(last_pwm<=1099 || last_pwm>=1901){
-        last_pwm = 1500;
-    }
     // Output limits with no slew time applied
-    float output_slew_limit_up = 1.0f;
-    float output_slew_limit_dn = 0.0f;
-    float output_delta_max = 1.0f / (constrain_float(slew_time, 0.0f, 0.5f) * _loop_rate);
-    output_delta_max *= (_throttle_radio_max-_throttle_radio_min)/2;
-    // If MOT_SLEW_UP_TIME is set, calculate the highest allowed new output value, constrained 0.0~1.0
+    int16_t output_slew_limit_up = 1900;
+    int16_t output_slew_limit_dn = 1100;
+    float output_delta_max = 400.0f / (constrain_float(slew_time, 0.0f, 10.0f) * _loop_rate);
+
+    // If MOT_SLEW_UP_TIME is set, calculate the highest allowed new output value, constrained 1100~1800
     if (is_positive(_slew_up_time)) {
-        output_slew_limit_up = constrain_float(last_pwm + output_delta_max, 0.0f, 1.0f);
+        output_slew_limit_up = constrain_int16(last_pwm + output_delta_max, 1100, 1900);
     }
 
-    // If MOT_SLEW_DN_TIME is set, calculate the lowest allowed new output value, constrained 0.0~1.0
+    // If MOT_SLEW_DN_TIME is set, calculate the lowest allowed new output value, constrained 0.0~400.0
     if (is_positive(_slew_dn_time)) {
-        output_slew_limit_dn = constrain_float(last_pwm - output_delta_max, 0.0f, 1.0f);
+        output_slew_limit_dn = constrain_int16(last_pwm - output_delta_max, 1100, 1900);
     }
     //return constrain_int16(1500 + thrust_in * 400, _throttle_radio_min, _throttle_radio_max);
 
-    return constrain_int16(1500 + thrust_in * 400, _throttle_radio_min*output_slew_limit_dn, _throttle_radio_max*output_slew_limit_up);
+    return constrain_int16(1500 + thrust_in * 400, output_slew_limit_dn, output_slew_limit_up);
 }
 
 void AP_Motors6DOF::output_to_motors()
@@ -311,7 +313,8 @@ void AP_Motors6DOF::output_to_motors()
         // set motor spool up output based on thrust requests
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
             if (motor_enabled[i]) {
-                motor_out[i] = calc_thrust_to_pwm_slew(_thrust_rpyt_out[i], lastPwm[i], _slew_up_time);
+                //motor_out[i] = calc_thrust_to_pwm_slew(_thrust_rpyt_out[i], lastPwm[i], _slew_up_time);
+                motor_out[i] = calc_thrust_to_pwm(_thrust_rpyt_out[i]);
                 lastPwm[i] = motor_out[i];
             }
         }
@@ -321,7 +324,8 @@ void AP_Motors6DOF::output_to_motors()
         // set motor output based on thrust requests
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
             if (motor_enabled[i]) {
-                motor_out[i] = calc_thrust_to_pwm_slew(_thrust_rpyt_out[i], lastPwm[i], _slew_dn_time);
+                //motor_out[i] = calc_thrust_to_pwm_slew(_thrust_rpyt_out[i], lastPwm[i], _slew_dn_time);
+                motor_out[i] = calc_thrust_to_pwm(_thrust_rpyt_out[i]);
                 lastPwm[i] = motor_out[i];
             }
         }
@@ -329,6 +333,7 @@ void AP_Motors6DOF::output_to_motors()
     case SpoolState::THROTTLE_UNLIMITED:
         for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
             if (motor_enabled[i]) {
+                //motor_out[i] = calc_thrust_to_pwm_slew(_thrust_rpyt_out[i], lastPwm[i], _slew_dn_time);
                 motor_out[i] = calc_thrust_to_pwm(_thrust_rpyt_out[i]);
             }
         }
