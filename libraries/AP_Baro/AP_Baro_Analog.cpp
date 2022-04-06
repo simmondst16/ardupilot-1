@@ -32,8 +32,8 @@ extern const AP_HAL::HAL& hal;
    constructor is not called until detect() returns true, so we
    already know that we should setup the barometer
 */
-AP_Baro_Analog::AP_Baro_Analog(AP_Baro_Analog::Baro_State &_state, AP_Baro_Params &_params) :
-    AP_Baro_Backend(_state, _params)
+AP_Baro_Analog::AP_Baro_Analog(AP_Baro &baro, AP_Baro_Params &_params) :
+    AP_Baro_Backend(baro)
 {
     source = hal.analogin->channel(_params.pin);
     if (source == nullptr) {
@@ -115,7 +115,7 @@ void AP_Baro_Analog::update(void)
     state.distance_cm = dist_m * 100.0f;
     state.last_reading_ms = AP_HAL::millis();
 
-    // update range_valid state based on distance measured
+    // update range_valid state based on depth measured
     update_status();
 }
 

@@ -8,7 +8,7 @@ class AP_Baro_Analog : public AP_Baro_Backend
 {
 public:
     // constructor
-    AP_Baro_Analog(Baro::Baro_State &_state, AP_Baro_Params &_params);
+    AP_Baro_Analog(AP_Baro &baro, AP_Baro_Params &_params);
 
     // static detection function
     static bool detect(AP_Baro_Params &_params);
