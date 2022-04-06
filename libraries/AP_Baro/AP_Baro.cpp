@@ -41,6 +41,7 @@
 #include "AP_Baro_FBM320.h"
 #include "AP_Baro_DPS280.h"
 #include "AP_Baro_BMP388.h"
+#include "AP_Baro_Analog.h"
 #if HAL_WITH_UAVCAN
 #include "AP_Baro_UAVCAN.h"
 #endif

@@ -134,7 +134,14 @@ void Sub::althold_run()
         } else if (ap.at_bottom) {
             pos_control.set_alt_target(inertial_nav.get_altitude() + 10.0f); // set target to 10 cm above bottom
             holding_depth = true;
-        } else if (!holding_depth) {
+        } 
+        else if(rangefinder_alt_ok()){
+            float target_climb_rate = get_surface_tracking_climb_rate(0, pos_control.get_alt_target(), G_Dt);
+            pos_control.set_alt_target_from_climb_rate_ff(target_climb_rate, G_Dt, false);
+            holding_depth = true;
+        }
+            
+        else if (!holding_depth) {
             pos_control.set_target_to_stopping_point_z();
             holding_depth = true;
         }
