@@ -27,7 +27,7 @@
 
 #include <AP_HAL/AP_HAL.h>
 
-// Common dependencies
+// Common dependencies test
 #include <AP_Common/AP_Common.h>
 #include <AP_Common/Location.h>
 #include <AP_Param/AP_Param.h>
